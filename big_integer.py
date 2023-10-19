@@ -24,13 +24,14 @@ class BigInteger:
         return BigInteger(''.join(self._go_throw_blocks(other, 'and')))
 
     def __rshift__(self, other):
-        if other >= len(self.get_blocks()) * 8:
+        bin_arr = self._from_blocks_to_bin_arr(self.get_blocks())
+        if other >= len(bin_arr):
             return BigInteger('0')
-        return BigInteger(self._from_blocks_to_hex_str(self.get_blocks[other // 8:]))
+        return BigInteger(self._from_bin_arr_to_hex_str(bin_arr[other:]))
 
     def __lshift__(self, other):
-        shifted_blocks = [0] * (other // 8)
-        return BigInteger(self._from_blocks_to_hex_str(shifted_blocks + self.get_blocks()))
+        shifted_blocks = [0] * other
+        return BigInteger(self._from_bin_arr_to_hex_str(shifted_blocks + self._from_blocks_to_bin_arr(self.get_blocks())))
 
     def __add__(self, other):
         result = []
@@ -138,6 +139,19 @@ class BigInteger:
         temp = map(lambda i: hex(i)[2:], blocks)
         return ''.join(map(lambda block: '0' * (8 - len(block)) + block, temp))
 
+    @staticmethod
+    def _from_blocks_to_bin_arr(blocks):
+        temp = map(lambda i: bin(i)[2:], blocks)
+        bin_str = ''.join(map(lambda block: '0' * (32 - len(block)) + block, temp))
+        return list(map(int, bin_str))
+
+    @staticmethod
+    def _from_bin_arr_to_hex_str(bin_arr):
+        result = []
+        while bin_arr:
+            result.append(int(bin_arr[-32:], 2))
+            bin_arr = bin_arr[:-32]
+        return BigInteger._from_blocks_to_hex_str(result)
     def _go_throw_blocks(self, other, operand:str):
         result = []
         temp_self = self.get_blocks()
